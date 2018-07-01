@@ -8,7 +8,7 @@ from mininet.log import setLogLevel
 import os
 
 class POXBridge(Controller):
-	#“Custom Controller class to invoke POX forwarding.l2_learning"
+	#Custom Controller class to invoke POX forwarding.l2_learning"
 	def start(self):
 		#start pox learning switch
 		self.pox = '%s/pox/pox.py'%os.environ['HOME']
@@ -30,4 +30,4 @@ if __name__=='__main__':
 	result2 = h2.cmd('ping -c 5 10.0.0.1')
 	print result2
 	net.stop()
-	
+
