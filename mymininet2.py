@@ -29,8 +29,8 @@ if __name__ == '__main__':
     net.pingAll()
     h1, h2 = net.get( 'h1', 'h2' )
     #net.iperf((h1, h2))
-    result1=h1.cmd('ping -c 5 10.0.0.2')
-    print result1
+    #result1=h1.cmd('ping -c 5 10.0.0.2')
+    #print result1
     result2=h2.cmd('ping -c 5 10.0.0.1')
     print result2
     net.stop()
