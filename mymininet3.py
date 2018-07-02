@@ -25,41 +25,41 @@ def scratchNet(cname = 'controller',cargs = '-v ptcp:'):
 	Link(h0,switch0)
 	Link(h1,switch0)
 
-	info("***Configuring hosts\n")
+	info(" ***Configuring hosts\n")
 	h0.setIP('192.168.123.1/24')
 	h1.setIP('192.168.123.2/24')
 	info(str(h0)+'\n')
 	info(str(h1)+'\n')
 
-	info("*** Starting network using Open vswitch")
-	controller.cmd(cname+''+cargs+'&')
-	switch0.cmd('ovs-vsctl del-br dp0')
-	switch0.cmd('ovs-vsctl add-br dp0')
+	# info("*** Starting network using Open vswitch")
+	# controller.cmd(cname+''+cargs+'&')
+	# switch0.cmd('ovs-vsctl del-br dp0')
+	# switch0.cmd('ovs-vsctl add-br dp0')
 
-	for intf in switch0.intfs.values():
-		print intf
-		print switch0.cmd('ovs-vsctl add-port dp0 %s'%intf)
+	# for intf in switch0.intfs.values():
+	# 	print intf
+	# 	print switch0.cmd('ovs-vsctl add-port dp0 %s'%intf)
 
-	#Note:controller and switch are in root namespace,and we can connect via loopback interface
-	switch0.cmd('ovs-vsctl set-controller dp0 tcp:127.0.0.1:6633')
-	switch0.cmd('ovs-ofctl add-flow dp0 \"in_port=1 actions=output：2\”')
-	switch0.cmd('ovs-ofctl add-flow dp0 \"in_port=2 actions=output：1\"')
+	# #Note:controller and switch are in root namespace,and we can connect via loopback interface
+	# switch0.cmd('ovs-vsctl set-controller dp0 tcp:127.0.0.1:6633')
+	# switch0.cmd('ovs-ofctl add-flow dp0 \"in_port=1 actions=output：2\”')
+	# switch0.cmd('ovs-ofctl add-flow dp0 \"in_port=2 actions=output：1\"')
 
-	info('*** Waiting for switch to connect to controller')
-	while 'is_connected' not in quietRun('ovs-vsctl show'):
-		sleep(1)
-		info('.')
-	info('\n')
+	# info('*** Waiting for switch to connect to controller')
+	# while 'is_connected' not in quietRun('ovs-vsctl show'):
+	# 	sleep(1)
+	# 	info('.')
+	# info('\n')
 
-	info("*** Running test\n")
-	h0.cmdPrint('ping -c3'+h1.IP())
-	h1.cmdPrint('ping -c3'+h0.IP())
+	# info("*** Running test\n")
+	# h0.cmdPrint('ping -c3'+h1.IP())
+	# h1.cmdPrint('ping -c3'+h0.IP())
     
-    info(" *** Stopping network\n")
-    controller.cmd('kill %'+cname)
-    switch0.cmd('ovs-vsctl del-br dp0')
-    switch0.deleteIntfs()
-    info('\n')
+    #info(" *** Stopping network\n")
+    #controller.cmd('kill %'+cname)
+    #switch0.cmd('ovs-vsctl del-br dp0')
+    #switch0.deleteIntfs()
+    #info('\n')
 
 if __name__ == '__main__':
 	setLogLevel('info')
