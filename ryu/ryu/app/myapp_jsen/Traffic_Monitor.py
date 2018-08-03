@@ -16,7 +16,7 @@ class TrafficMonitor(simple_switch_13.simpleswitch13):
     def __init__(self,*args,**kwargs):
         super(TrafficMonitor,self).__init__(*args,**kwargs)
         self.datapaths={}
-        self.monitor_thread = hub.spawn(self._monitor())
+        self.monitor_thread = hub.spawn(self._monitor)
     @set_ev_cls(ofp_event.EventOFPStateChange,[MAIN_DISPATCHER,DEAD_DISPATCHER])
     def _state_change_handler(self,ev):
         datapath = ev.datapath
