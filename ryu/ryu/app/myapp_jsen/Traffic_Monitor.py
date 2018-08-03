@@ -75,8 +75,11 @@ class TrafficMonitor(simple_switch_13.simpleswitch13):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply,MAIN_DISPATCHER)
     def flow_stats_reply_handler(self,ev):
         flows = []
+        i = 0
         for stat in ev.msg.body:
+            self.logger.info('No %s flow stats',str(i+1))
             self.logger.info('%s',json.dumps(ev.msg.to_jsondict(),ensure_ascii=True,indent=3,sort_keys=True))
+            i+=1
             # body = ev.msg.body
             # self.logger.info('datapath ' 'in-port eth-dst
             #                  'out-port packets bytes')
