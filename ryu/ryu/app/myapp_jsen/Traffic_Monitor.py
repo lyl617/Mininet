@@ -47,18 +47,21 @@ class TrafficMonitor(simple_switch_13.simpleswitch13):
     def port_stats_reply_handler(self,ev):
         ports=[]
         for stat in ev.msg.body:
-            ports.append('port_no=%d,rx_packets,tx_packets=%d,'
-                         'rx_bytes=%d,tx_bytes=%d,'
-                         'rx_dropped=%d，tx_dropped=%d,'
-                         'rx_errors=%d,tx_errors=%d,'
-                         'rx_frame_err=%d,rx_over_err=%d,rx_crc_err=%d,'
-                         'collisions=%d,duration_sec=%d,duration_nsec=%d'%
-                         (stat.port_no,stat.tx_packets,stat.tx_packets,
-                          stat.rx_bytes,stat.tx_bytes,
-                          stat.rx_dropped,stat.tx_dropped,
-                          stat.rx_errors,stat.tx_errors,
-                          stat.rx_frame_err,stat.rx_over_err,stat.rx_crc_err,
-                          stat.collisions,stat.duration_sec,stat.duration_nsec))
+            ports.append('port_no=%d '
+                     'rx_packets=%d tx_packets=%d '
+                     'rx_bytes=%d tx_bytes=%d '
+                     'rx_dropped=%d tx_dropped=%d '
+                     'rx_errors=%d tx_errors=%d '
+                     'rx_frame_err=%d rx_over_err=%d rx_crc_err=%d '
+                     'collisions=%d duration_sec=%d duration_nsec=%d' %
+                     (stat.port_no,
+                      stat.rx_packets, stat.tx_packets,
+                      stat.rx_bytes, stat.tx_bytes,
+                      stat.rx_dropped, stat.tx_dropped,
+                      stat.rx_errors, stat.tx_errors,
+                      stat.rx_frame_err, stat.rx_over_err,
+                      stat.rx_crc_err, stat.collisions,
+                      stat.duration_sec, stat.duration_nsec))
         self.logger.debug('PortStats: %s',ports)
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply,MAIN_DISPATCHER)
     def flow_stats_reply_handler(self,ev):
