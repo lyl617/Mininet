@@ -21,6 +21,8 @@ url = '/simpleswitch/mactable/{dpid}'
 class RestApi(simple_switch_13.simpleswitch13):
     def __init__(self):
         super(RestApi,self).__init__()
+    def test(self):
+        pass
 
 
 if __name__ == "__main__":
