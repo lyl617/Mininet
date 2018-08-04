@@ -55,13 +55,8 @@ class simpleswitch13(app_manager.RyuApp):
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
 
-<<<<<<< HEAD
-            in_port = msg.match["in_port"]
-            print("Flow inport:%s")%in_port
-=======
         in_port = msg.match["in_port"]
         print("Flow inport:%s")%in_port
->>>>>>> 848654ccd9f01cc5e23f854aeac703fe8bec8cc1
         
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -93,9 +88,9 @@ class simpleswitch13(app_manager.RyuApp):
         data = None
         if msg.buffer_id == ofp.OFP_NO_BUFFER:
             data = msg.data
-            out = ofp_parser.OFPPacketOut(datapath=dp,in_port=in_port,actions=actions,data=data,buffer_id=msg.buffer_id)
+        out = ofp_parser.OFPPacketOut(datapath=dp,in_port=in_port,actions=actions,data=data,buffer_id=msg.buffer_id)
 
-            dp.send_msg(out)
+        dp.send_msg(out)
 
 
 
