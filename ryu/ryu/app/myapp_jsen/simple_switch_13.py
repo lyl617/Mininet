@@ -34,7 +34,7 @@ class simpleswitch13(app_manager.RyuApp):
             mod = ofp_parser.OFPFlowMod(datapath,command=ofproto.OFPFC_ADD,priority=priority,
                                         match=match,instructions=inst)
         datapath.sendmsg(mod)
-    @set_ev_cls(ofp_event.EVENTOFPSwitchFeature,CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeature,CONFIG_DISPATCHER)
     def switch_feature_handler(self,ev):
         msg = ev.msg
         dp = msg.datapth
@@ -46,7 +46,7 @@ class simpleswitch13(app_manager.RyuApp):
         actions = [ofp_parser.OFPActionOutput(ofp.OFPP_CONTROLLER,ofp.OFPCML_NO_BUFFER)]
 
         self.add_flows(datapath=dp,priority=0,match=match,actions=actions)
-    @set_ev_cls(ofp_event.EVENTOFPPacketIn,MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPacketIn,MAIN_DISPATCHER)
     def packet_in_handler(self,ev):
         msg = ev.msg
         dp = msg.datapth
