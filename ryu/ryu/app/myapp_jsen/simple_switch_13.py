@@ -50,12 +50,12 @@ class simpleswitch13(app_manager.RyuApp):
     def packet_in_handler(self,ev):
         if ev.msg.msg_len < ev.msg.total_len:
             self.logger.debug("packet truncated:only %s of %s bytes",ev.msg.msg_len,ev.msg.total_len)
-            msg = ev.msg
-            dp = msg.datapath
-            ofp = dp.ofproto
-            ofp_parser = dp.ofproto_parser
+        msg = ev.msg
+        dp = msg.datapath
+        ofp = dp.ofproto
+        ofp_parser = dp.ofproto_parser
 
-            in_port = msg.match["in_port"]
+        in_port = msg.match["in_port"]
         print("Flow inport:%s")%in_port
         
         pkt = packet.Packet(msg.data)
