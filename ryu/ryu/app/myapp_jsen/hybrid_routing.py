@@ -34,6 +34,9 @@ class simpleswitch13(app_manager.RyuApp):
             mod = ofp_parser.OFPFlowMod(datapath,priority=priority,
                                         match=match,instructions=inst)
         datapath.send_msg(mod)
+
+    def get_detail_path(self,src,dst):
+        pass
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures,CONFIG_DISPATCHER)
     def switch_feature_handler(self,ev):
 	#print ev.msg
