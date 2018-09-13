@@ -5,6 +5,8 @@
 # @Site    : 
 # @File    : simple_switch_13.py
 # @Software: PyCharm
+import Topo_Switch_13
+
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER,MAIN_DISPATCHER
@@ -13,13 +15,19 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
+import algorithms
+import random
+from collections import defaultdict
+from ryu.lib.dpid import dpid_to_str,str_to_dpid
 
-class simpleswitch13(app_manager.RyuApp):
+class simpleswitch13(Topo_Switch_13.TopoSwitch13):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     def __init__(self,*args,**kwargs):
         super(simpleswitch13,self).__init__(*args,**kwargs)
         self.mac_to_port = {}
         self.datapaths = {}
+        self.hosts_num = 8#numbers of hosts
+        self.full_path = defaultdict(lambda: defaultdict(lambda:None))
 
     def add_flows(self,datapath,priority,match,actions,buffer_id=None):
         ofproto = datapath.ofproto
@@ -34,9 +42,39 @@ class simpleswitch13(app_manager.RyuApp):
             mod = ofp_parser.OFPFlowMod(datapath,priority=priority,
                                         match=match,instructions=inst)
         datapath.send_msg(mod)
+    
+    def install_path(self, paths, dst, in_dpid, parser, ofproto, msg):
+        nodes = list(paths.keys())
+        out_port = 0
+        self.logger.debug("try to install path for:%s",nodes)
+        self.logger.debug("origin dpid is %s",in_dpid)
+        for node in nodes:
+            target_dpid = str_to_dpid(node)
+            if target_dpid == in_dpid:
+                out_port = paths[node][1]
+            target_in_port = paths[node][0]
+            target_out_port = paths[node][1]
+
+            target_actions = [parser.OFPActionOutput(target_out_port)]
+
+            target_match = parser.OFPMatch(eth_dst=dst)
+            target_datapath = self._get_datapath(target_dpid)
+
+            if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+                self.add_flows(target_datapath,1,target_match,target_actions,msg.buffer_id)
+            else:
+                self.add_flows(target_datapath,1,target_match,target_actions)
+        
+        return out_port
+
+    def get_hosts_pair(self, ratio):
+        hosts_pair = defaultdict(lambda:defaultdict(lambda:None))
+        for i in range(self.hosts_num):
 
     def get_detail_path(self,src,dst):
-        pass
+        return algorithms.get_path(src, dst, self.full_path, self.net_topo)
+
+
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures,CONFIG_DISPATCHER)
     def switch_feature_handler(self,ev):
 	#print ev.msg
@@ -51,6 +89,8 @@ class simpleswitch13(app_manager.RyuApp):
         actions = [ofp_parser.OFPActionOutput(ofp.OFPP_CONTROLLER,ofp.OFPCML_NO_BUFFER)]
 
         self.add_flows(datapath=dp,priority=0,match=match,actions=actions)
+
+
     @set_ev_cls(ofp_event.EventOFPPacketIn,MAIN_DISPATCHER)
     def packet_in_handler(self,ev):
 	#self.logger.info("pakcet in handler ev:",str(ev))
