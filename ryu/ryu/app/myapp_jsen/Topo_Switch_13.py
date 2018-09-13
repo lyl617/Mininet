@@ -3,9 +3,63 @@
 # @Time    : 2018/8/6 8:54 PM
 # @Author  : Jsen617
 # @Site    : 
-# @File    : Topo_Switch_13.py
+# @File    : topo_Switch_13.py
 # @Software: PyCharm
 from operator import attrgetter
+
+"""
+Usage example
+1. Run this application:
+$ ryu-manager  --observe-links topo_Switch_13.py
+
+
+2. Switch struct
+
+please see ryu/topology/switches.py
+
+msg struct: 
+{'dpid': '0000000000000001', 
+'ports': [
+            {'dpid': '0000000000000001', 
+            'hw_addr': 'b6:b8:0b:3f:e5:86', 
+            'name': 's1-eth1', 
+            'port_no': '00000001'}, 
+            {'dpid': '0000000000000001', 
+            'hw_addr': '2e:fa:67:bd:f3:b2', 
+            'name': 's1-eth2', 
+            'port_no': '00000002'}
+        ]
+}
+
+2. Link struct
+
+please see ryu/topology/switches.py
+
+note: two node will get two link.
+
+eg: s1--s2  will get link: s1 -> s2 and link: s2->s1
+
+msg struct
+
+{
+'dst': {'port_no': '00000001', 
+         'name': 's2-eth1', 
+         'hw_addr': '52:9c:f6:6d:d3:5f', 
+         'dpid': '0000000000000002'}, 
+'src': {'port_no': '00000001', 
+        'name': 's1-eth1', 
+        'hw_addr': '22:33:5a:65:de:62', 
+        'dpid': '0000000000000001'}
+}
+
+
+3. Topology change is notified:
+< {"params": [{"ports": [{"hw_addr": "56:c7:08:12:bb:36", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "de:b9:49:24:74:3f", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}], "jsonrpc": "2.0", "method": "event_switch_enter", "id": 1}
+> {"id": 1, "jsonrpc": "2.0", "result": ""}
+< {"params": [{"ports": [{"hw_addr": "56:c7:08:12:bb:36", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "de:b9:49:24:74:3f", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}], "jsonrpc": "2.0", "method": "event_switch_leave", "id": 2}
+> {"id": 2, "jsonrpc": "2.0", "result": ""}
+...
+"""
 import simple_switch_13
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER,CONFIG_DISPATCHER,DEAD_DISPATCHER
@@ -33,7 +87,7 @@ class TopoSwitch13(simple_switch_13.simpleswitch13):
         self.arp_table = {}
 
     @set_ev_cls(ofp_event.EventOFPStateChange,[MAIN_DISPATCHER,DEAD_DISPATCHER])
-    def _state_change_handeler(self,ev):
+    def _state_change_handler(self,ev):
 
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
