@@ -27,6 +27,7 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
         self.mac_to_port = {}
         self.datapaths = {}
         self.hosts_num = 8#numbers of hosts
+        self.ratio = 4 #ratio of matching
         self.full_path = defaultdict(lambda: defaultdict(lambda:None))
 
     def add_flows(self,datapath,priority,match,actions,buffer_id=None):
@@ -65,16 +66,20 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
             else:
                 self.add_flows(target_datapath,1,target_match,target_actions)
         
-        return out_port
+        return out_port#源节点的out port
 
-    def get_hosts_pair(self, ratio):
+    def get_hosts_pair(self):
         hosts_pair = defaultdict(list)
         hosts = []
         for i in range(self.hosts_num):
             hosts.append('h{}'.format(i+1))
         for h in hosts:
-            for i in range(ratio):
+            for i in range(self.ratio):
                 index_host = random.randint(0,self.hosts_num)
+                while hosts[index_host] in hosts_pair[h]:
+                    index_host = random.randint(0,self.hosts_num)
+                hosts_pair[h].append(hosts[index_host])
+        return hosts_pair
                 
     def get_detail_path(self,src,dst):
         return algorithms.get_path(src, dst, self.full_path, self.net_topo)
@@ -88,6 +93,18 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
 	#print dp
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
+
+        dpid = dp.id
+
+        hosts_pair = self.get_hosts_pair()
+        
+        for src,dsts in hosts_pair.items():
+            in_dpid = str_to_dpid(src)
+            if dpid == in_dpid:
+                for dst in dsts:
+                    paths = self.get_detail_path(src, dst)
+
+                    out_port = self.install_path(paths,dst,in_dpid,ofp_parser,ofp,msg)
 
         match = ofp_parser.OFPMatch()
         self.logger.info("add table-miss flow to Switch")
