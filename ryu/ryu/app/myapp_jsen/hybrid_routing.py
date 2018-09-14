@@ -68,9 +68,14 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
         return out_port
 
     def get_hosts_pair(self, ratio):
-        hosts_pair = defaultdict(lambda:defaultdict(lambda:None))
+        hosts_pair = defaultdict(list)
+        hosts = []
         for i in range(self.hosts_num):
-            
+            hosts.append('h{}'.format(i+1))
+        for h in hosts:
+            for i in range(ratio):
+                index_host = random.randint(0,self.hosts_num)
+                
     def get_detail_path(self,src,dst):
         return algorithms.get_path(src, dst, self.full_path, self.net_topo)
 
