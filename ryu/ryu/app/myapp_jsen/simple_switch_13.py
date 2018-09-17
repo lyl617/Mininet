@@ -60,7 +60,7 @@ class simpleswitch13(app_manager.RyuApp):
         ofp_parser = dp.ofproto_parser
 
         in_port = msg.match["in_port"]
-        print("Flow inport:%s")%in_port
+        #print("Flow inport:%s")%in_port
         
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -73,7 +73,7 @@ class simpleswitch13(app_manager.RyuApp):
         self.mac_to_port.setdefault(dpid,{})
 
         self.mac_to_port[dpid][src] = in_port
-        print("mac_to_port:",self.mac_to_port)
+        #print("mac_to_port:",self.mac_to_port)
         if dst in self.mac_to_port[dpid]:
             outport = self.mac_to_port[dpid][dst]
         else:

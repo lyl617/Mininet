@@ -96,7 +96,7 @@ mutex = threading.Lock()
 
 
 
-class TopoSwitch_13(simple_switch_13.SimpleSwitch13):
+class TopoSwitch_13(simple_switch_13.simpleswitch13):
 
     def __init__(self, *args, **kwargs):
         super(TopoSwitch_13, self).__init__(*args, **kwargs)
@@ -257,6 +257,7 @@ class TopoSwitch_13(simple_switch_13.SimpleSwitch13):
         while True:
             self._update_host_list()
             self._update_net_topo()
+            #print("net-topo:",self.net_topo)
             self.logger.info("all hosts: %s",[host for host in self.hosts])
             # self.logger.info("link number is: %s",len(self.links))
             # self.print_topo()

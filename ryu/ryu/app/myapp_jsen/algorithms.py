@@ -84,7 +84,7 @@ def dijkstra(src,topo):
     MAXINT = 300
 
     nodes = list(topo.keys())
-
+    #print(nodes)
     num = len(nodes)
 
     # print("nodes: ",nodes)
@@ -105,7 +105,7 @@ def dijkstra(src,topo):
             pos_src = i
         if topo[src][node] is not None:#if has node connect to src node
             Distance[i] = 1
-
+    #print("pos_src:",pos_src)
     Distance[pos_src] = 0#distance of src is 0
     final[pos_src] = 1#src node is selected
 
@@ -170,7 +170,7 @@ def get_path(src,dst,paths,topo):
     if paths[src][dst] is not None and len(paths[src][dst]) > 0:
         print("path is exits: %s --> %s : %s" % (src,dst,paths[src][dst]))
         return paths[src][dst]
-
+    topo = read_file("hosts_sws.txt")
     path = dijkstra(src,topo)
     
     
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     #print(all_path)
 
     #paths = get_path('d','f',all_path,topo)
-    paths = get_path('h1','h2',all_path,topo)
+    paths = get_path('h8','h4',all_path,topo)
     print(paths)
     #print(all_path)
 

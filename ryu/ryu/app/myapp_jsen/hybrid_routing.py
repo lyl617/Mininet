@@ -20,7 +20,7 @@ import random
 from collections import defaultdict
 from ryu.lib.dpid import dpid_to_str,str_to_dpid
 
-class simpleswitch13(Topo_Switch_13.TopoSwitch13):
+class simpleswitch13(Topo_Switch_13.TopoSwitch_13):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     def __init__(self,*args,**kwargs):
         super(simpleswitch13,self).__init__(*args,**kwargs)
@@ -43,14 +43,24 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
             mod = ofp_parser.OFPFlowMod(datapath,priority=priority,
                                         match=match,instructions=inst)
         datapath.send_msg(mod)
-    
+    def string_to_dpid(self,str):
+        """
+        str: "h1"
+        return:"0000000000000001"
+        """
+        number_str = str[1:]
+        number_str = hex(int(number_str))
+        number_str = number_str[2:].zfill(16)
+        return number_str                    
+        
     def install_path(self, paths, dst, in_dpid, parser, ofproto, msg):
         nodes = list(paths.keys())
         out_port = 0
         self.logger.debug("try to install path for:%s",nodes)
         self.logger.debug("origin dpid is %s",in_dpid)
         for node in nodes:
-            target_dpid = str_to_dpid(node)
+            node_str = self.string_to_dpid(node)
+            target_dpid = str_to_dpid(node_str)
             if target_dpid == in_dpid:
                 out_port = paths[node][1]
             target_in_port = paths[node][0]
@@ -75,9 +85,10 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
             hosts.append('h{}'.format(i+1))
         for h in hosts:
             for i in range(self.ratio):
-                index_host = random.randint(0,self.hosts_num)
-                while hosts[index_host] in hosts_pair[h]:
-                    index_host = random.randint(0,self.hosts_num)
+                index_host = random.randint(0,self.hosts_num-1)
+                while hosts[index_host] in hosts_pair[h]\
+                or hosts[index_host] == h:
+                    index_host = random.randint(0,self.hosts_num-1)
                 hosts_pair[h].append(hosts[index_host])
         return hosts_pair
                 
@@ -95,16 +106,28 @@ class simpleswitch13(Topo_Switch_13.TopoSwitch13):
         ofp_parser = dp.ofproto_parser
 
         dpid = dp.id
-
+        print("dpid",dpid)
         hosts_pair = self.get_hosts_pair()
-        
+        self.logger.info("111111111")
+        print(hosts_pair)
         for src,dsts in hosts_pair.items():
-            in_dpid = str_to_dpid(src)
-            if dpid == in_dpid:
-                for dst in dsts:
-                    paths = self.get_detail_path(src, dst)
-
-                    out_port = self.install_path(paths,dst,in_dpid,ofp_parser,ofp,msg)
+            self.logger.info('src:  %s'%src)
+            # in_dpid = str_to_dpid(src)
+            # if dpid == in_dpid:
+            for dst in dsts:
+                """
+                {'e10': [4, 1], 'a3': [2, 4], 'a5': [4, 2], 'e8': [1, 4], 'c2': [3, 1]}
+                """
+                paths = self.get_detail_path(src, dst)
+                print("src:%s,dst:%s"%(src,dst))
+                print("path:",paths)
+                for sw in paths.keys():
+                    number_sw = self.string_to_dpid(sw)
+                    in_dpid = str_to_dpid(number_sw)
+                    if dpid == in_dpid:
+                        out_port = self.install_path(paths,dst,in_dpid,ofp_parser,ofp,msg)
+                #in_switch = paths.keys()[0]
+               
 
         match = ofp_parser.OFPMatch()
         self.logger.info("add table-miss flow to Switch")

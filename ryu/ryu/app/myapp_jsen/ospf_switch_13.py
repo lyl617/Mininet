@@ -71,7 +71,7 @@ msg struct
 
 from operator import attrgetter
 
-import topo_switch_13
+import Topo_Switch_13
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER,CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
@@ -96,7 +96,7 @@ ETHERNET_MULTICAST = "ff:ff:ff:ff:ff:ff"
 
 
 
-class OSPFswitch_13(topo_switch_13.TopoSwitch_13):
+class OSPFswitch_13(Topo_Switch_13.TopoSwitch_13):
 
     def __init__(self, *args, **kwargs):
         super(OSPFswitch_13, self).__init__(*args, **kwargs)
@@ -144,7 +144,7 @@ class OSPFswitch_13(topo_switch_13.TopoSwitch_13):
         if pkt.get_protocol(ipv6.ipv6) :  # Drop the IPV6 Packets.
             match = parser.OFPMatch(eth_type=eth.ethertype)
             actions = []
-            self.add_flow(datapath, 1, match, actions)
+            self.add_flows(datapath, 1, match, actions)
             return None
 
         #------end
@@ -187,7 +187,7 @@ class OSPFswitch_13(topo_switch_13.TopoSwitch_13):
             if dst_ipv4 == '224.0.0.22' or dst_ipv4 == '224.0.0.251':
                 match = parser.OFPMatch(ipv4_dst=dst_ipv4)
                 actions = []
-                self.add_flow(datapath, 1, match, actions)
+                self.add_flows(datapath, 1, match, actions)
                 return None
         #-----end
 
@@ -237,6 +237,7 @@ class OSPFswitch_13(topo_switch_13.TopoSwitch_13):
         self.logger.debug("try to install path for : %s",nodes)
         self.logger.debug("origin dpid is %s",in_dpid)
         for node in nodes:
+            self.logger.info('node:%s'%node)
             target_dpid = str_to_dpid(node)
             if target_dpid == in_dpid:
                 out_port = paths[node][1]
@@ -251,9 +252,9 @@ class OSPFswitch_13(topo_switch_13.TopoSwitch_13):
             target_datapath = self._get_datapath(target_dpid)
 
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(target_datapath, 1, target_match, target_actions, msg.buffer_id)
+                self.add_flows(target_datapath, 1, target_match, target_actions, msg.buffer_id)
             else:
-                self.add_flow(target_datapath, 1, target_match, target_actions)
+                self.add_flows(target_datapath, 1, target_match, target_actions)
 
         return out_port
 
