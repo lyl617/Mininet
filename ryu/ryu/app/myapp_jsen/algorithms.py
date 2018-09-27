@@ -105,7 +105,7 @@ def dijkstra(src,topo):
             pos_src = i
         if topo[src][node] is not None:#if has node connect to src node
             Distance[i] = 1
-    #print("pos_src:",pos_src)
+    print("pos_src:",pos_src)
     Distance[pos_src] = 0#distance of src is 0
     final[pos_src] = 1#src node is selected
 

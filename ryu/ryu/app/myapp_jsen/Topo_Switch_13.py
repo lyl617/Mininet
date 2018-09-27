@@ -83,7 +83,8 @@ from collections import defaultdict
 from ryu.topology import event
 from ryu.topology.switches import *
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
-
+import algorithms
+import random
 import threading
 
 
@@ -107,9 +108,11 @@ class TopoSwitch_13(simple_switch_13.simpleswitch13):
         self.port_state = {}
         self.links = defaultdict(lambda: None)
         self.hosts = HostState()
-
+        
         self.switch_macs = set()
-
+        self.hosts_num = 8#numbers of hosts
+        self.ratio = 4 #ratio of matching
+        self.hosts_pair = self.get_hosts_pair()
         # links has no weight!!
         self.net_topo = defaultdict(lambda: defaultdict(lambda: None))
 
@@ -126,15 +129,79 @@ class TopoSwitch_13(simple_switch_13.simpleswitch13):
             if datapath.id not in self.datapaths:
                 self.logger.debug('register datapath: %016x', datapath.id)
                 self.datapaths[datapath.id] = datapath
+                #print("MAIN_datapaths:",self.datapaths)
         elif ev.state == DEAD_DISPATCHER:
             if datapath.id in self.datapaths:
                 self.logger.debug('unregister datapath: %016x', datapath.id)
                 del self.datapaths[datapath.id]
+                #print("DEAD_datapaths:",self.datapaths)
 
+    def install_path(self, paths, dst, in_dpid, parser, ofproto, msg):
+        nodes = list(paths.keys())
+        out_port = 0
+        self.logger.debug("try to install path for:%s",nodes)
+        self.logger.debug("origin dpid is %s",in_dpid)
+        for node in nodes:
+            #node_str = self.string_to_dpid(node)
+            #target_dpid = str_to_dpid(node_str)
+            target_dpid = int(node[1:])
+            #print("target_dpid:",target_dpid)
+            if target_dpid == in_dpid:
+                out_port = paths[node][1]
+            target_in_port = paths[node][0]
+            target_out_port = paths[node][1]
+
+            target_actions = [parser.OFPActionOutput(target_out_port)]
+            #dst_mac = self.host_mac[dst]
+            dst_ip = "10.0.0.%s"%dst[1:]
+            print("dst_mac:",dst_ip)
+            target_match = parser.OFPMatch(in_port=target_in_port,eth_type=0x0800,ipv4_dst=dst_ip)
+            target_datapath = self._get_datapath(target_dpid)
+            #print("target_datapath:",target_datapath)
+            # if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+            #     self.add_flows(target_datapath,1,target_match,target_actions,msg.buffer_id)
+            # else:
+            if target_datapath:
+                self.add_flows(target_datapath,1,target_match,target_actions)
+        
+        return out_port#源节点的out port
+
+    def get_detail_path(self,src,dst):
+        return algorithms.get_path(src, dst, self.full_path, self.net_topo)
+        
+    def get_hosts_pair(self):
+        hosts_pair = defaultdict(list)
+        hosts = []
+        for i in range(self.hosts_num):
+            hosts.append('h{}'.format(i+1))
+        for h in hosts:
+            for i in range(self.ratio):
+                index_host = random.randint(0,self.hosts_num-1)
+                while hosts[index_host] in hosts_pair[h]\
+                or hosts[index_host] == h:
+                    index_host = random.randint(0,self.hosts_num-1)
+                hosts_pair[h].append(hosts[index_host])
+        return hosts_pair
+
+    def string_to_dpid(self,str):
+        """
+        str: "h1"
+        return:"0000000000000001"
+        """
+        number_str = str[1:]
+        number_str = hex(int(number_str))
+        number_str = number_str[2:].zfill(16)
+        return number_str    
 
     @set_ev_cls(event.EventSwitchEnter)
     def _event_switch_enter_handler(self,ev):
         msg = ev.switch
+       
+        dp = msg.dp
+        dpid = dp.id
+        ofp = dp.ofproto
+        ofp_parser = dp.ofproto_parser
+        #print(dpid)
     #    msg struct: 
     #    {'dpid': '0000000000000001', 
     #    'ports': [
@@ -151,6 +218,25 @@ class TopoSwitch_13(simple_switch_13.simpleswitch13):
 
         
         self._register(msg.dp)
+        
+        for src,dsts in self.hosts_pair.items():
+            self.logger.info('src:  %s'%src)
+            # in_dpid = str_to_dpid(src)
+            # if dpid == in_dpid:
+            for dst in dsts:
+                """
+                {'e10': [4, 1], 'a3': [2, 4], 'a5': [4, 2], 'e8': [1, 4], 'c2': [3, 1]}
+                """
+                paths = self.get_detail_path(src, dst)
+                print("src:%s,dst:%s"%(src,dst))
+                print("path:",paths)
+                for sw in paths.keys():
+                    number_sw = self.string_to_dpid(sw)
+                    in_dpid = str_to_dpid(number_sw)
+                    #in_dpid = int(sw[1:])
+                    if dpid == in_dpid:
+                        print("install path")
+                        out_port = self.install_path(paths,dst,in_dpid,ofp_parser,ofp,msg)
         self.logger.info('Switch enter: %s',dpid_to_str(msg.dp.id))
 
 
@@ -186,6 +272,7 @@ class TopoSwitch_13(simple_switch_13.simpleswitch13):
             return switch
     
     def _get_datapath(self,dpid):
+        #print("datapahts:",self.datapaths)
         if dpid in self.datapaths:
             return self.datapaths[dpid]
 
@@ -272,7 +359,7 @@ class TopoSwitch_13(simple_switch_13.simpleswitch13):
             src_mac = src_port['dpid']
             dst_mac = dst_port['dpid']
             self.net_topo[src_mac][dst_mac] = link.to_dict()
-
+ 
         for host_mac in self.hosts:
             host = self.hosts[host_mac].to_dict()
             switch_port = host['port']
